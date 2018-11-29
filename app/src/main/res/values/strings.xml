@@ -1,3 +1,7 @@
 <resources>
     <string name="app_name">FlatShare</string>
+    <string name="nom">Nom</string>
+    <string name="email">Email</string>
+    <string name="registrarse">Registrar-se</string>
+    <string name="entrar">Entrar</string>
 </resources>
