@@ -38,14 +38,15 @@ public class ShoppingListActivity extends AppCompatActivity {
             @Override
             public void onEvent(DocumentSnapshot documentSnapshot, FirebaseFirestoreException e) {
                 String adresa = documentSnapshot.getString("adreça");
-                hola.setText(adresa);
+                //hola.setText(adresa);
             }
         });
 
         //Forma de introduir dades a Firebase
-        Map<String, Object> camps = new HashMap<>();
+        /*Map<String, Object> camps = new HashMap<>();
         camps.put("adreça", "Colom 1");
         camps.put("numincquilins", 4);
+
         db.collection("pisos").add(camps).addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
             @Override
             public void onSuccess(DocumentReference documentReference) {
@@ -56,7 +57,8 @@ public class ShoppingListActivity extends AppCompatActivity {
             public void onFailure(@NonNull Exception e) {
                 Toast.makeText(ShoppingListActivity.this, "Fallo al gravar pis", Toast.LENGTH_SHORT).show();
             }
-        });
+        });*/
+
 
     }
 }
