@@ -31,7 +31,7 @@ public class ShoppingListActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_shopping_list);
 
-        hola = findViewById(R.id.hola);
+       // hola = findViewById(R.id.hola);
 
         //Forma de obtenir la info de Firebase
         db.collection("pisos").document("WExoO2OJvJGWPlAmBZLd").addSnapshotListener(new EventListener<DocumentSnapshot>() {
