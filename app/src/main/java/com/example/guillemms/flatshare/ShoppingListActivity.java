@@ -1,8 +1,12 @@
 package com.example.guillemms.flatshare;
 
+import android.content.Intent;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -31,9 +35,7 @@ public class ShoppingListActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_shopping_list);
 
-       // hola = findViewById(R.id.hola);
-
-        //Forma de obtenir la info de Firebase
+       /*Forma de obtenir la info de Firebase
         db.collection("pisos").document("WExoO2OJvJGWPlAmBZLd").addSnapshotListener(new EventListener<DocumentSnapshot>() {
             @Override
             public void onEvent(DocumentSnapshot documentSnapshot, FirebaseFirestoreException e) {
@@ -42,8 +44,8 @@ public class ShoppingListActivity extends AppCompatActivity {
             }
         });
 
-        //Forma de introduir dades a Firebase
-        /*Map<String, Object> camps = new HashMap<>();
+        Forma de introduir dades a Firebase
+        Map<String, Object> camps = new HashMap<>();
         camps.put("adreça", "Colom 1");
         camps.put("numincquilins", 4);
 
@@ -60,5 +62,31 @@ public class ShoppingListActivity extends AppCompatActivity {
         });*/
 
 
+
+
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu){
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.shopping_menu, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item){
+        switch (item.getItemId()){
+            case R.id.menuNewItem:
+                //Afaguir nou item
+                break;
+            case R.id.menuFilter:
+                //Filtrar els teus items comprats
+                break;
+            case R.id.menuNewUser:
+                Intent intent = new Intent(this, AddTenantActivity.class);
+                startActivity(intent);
+                break;
+        }
+        return true;
     }
 }

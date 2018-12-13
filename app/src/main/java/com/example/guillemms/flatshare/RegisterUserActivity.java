@@ -41,11 +41,15 @@ public class RegisterUserActivity extends AppCompatActivity {
                 Map<String, Object> camps = new HashMap<>();
                 camps.put("Name", name);
                 camps.put("Email", email);
+                camps.put("ID Flat", null);
 
                 db.collection("Users").add(camps).addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
                     @Override
                     public void onSuccess(DocumentReference documentReference) {
+                        String userId = documentReference.getId();
+                        // TODO: Guardar a SharedPreferences
                         Toast.makeText(RegisterUserActivity.this, "Registrat", Toast.LENGTH_SHORT).show();
+                        openFlatActivity(userId);
                     }
                 }).addOnFailureListener(new OnFailureListener() {
                     @Override
@@ -54,13 +58,14 @@ public class RegisterUserActivity extends AppCompatActivity {
                     }
                 });
 
-                activity();
+
             }
         });
     }
 
-    private void activity(){
+    private void openFlatActivity(String userId){
         Intent intent = new Intent(this, FlatActivity.class);
+        intent.putExtra("userId", userId);
         startActivity(intent);
     }
 }

@@ -13,7 +13,10 @@ import android.widget.Toast;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.DocumentSnapshot;
+import com.google.firebase.firestore.EventListener;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.FirebaseFirestoreException;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -24,6 +27,7 @@ public class FlatActivity extends AppCompatActivity {
     private TextView ID;
     private EditText name;
     private Button create;
+    private String userId;
 
     //TODO: Mostrar id usuari
     //TODO: Revisar constantment si l'usuari esta en un pis
@@ -34,10 +38,15 @@ public class FlatActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_flat);
 
+
         ID = findViewById(R.id.text_view_id);
         name = findViewById(R.id.editText);
         create = findViewById(R.id.button_create);
 
+        Intent intent = getIntent();
+        if(intent!=null){
+            userId = intent.getStringExtra("userId");
+        }
         create.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -46,10 +55,11 @@ public class FlatActivity extends AppCompatActivity {
                 Map<String, Object> camps = new HashMap<>();
                 camps.put("Name", flatName);
 
-                db.collection("Flat").add(camps).addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
+                db.collection("Flats").add(camps).addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
                     @Override
                     public void onSuccess(DocumentReference documentReference) {
                         Toast.makeText(FlatActivity.this, "Pis creat", Toast.LENGTH_SHORT).show();
+                        openTaskActivity();
                     }
                 }).addOnFailureListener(new OnFailureListener() {
                     @Override
@@ -58,12 +68,24 @@ public class FlatActivity extends AppCompatActivity {
                     }
                 });
 
-                activity();
+
+            }
+        });
+
+        db.collection("Users").document(userId).addSnapshotListener(new EventListener<DocumentSnapshot>() {
+            @Override
+            public void onEvent(DocumentSnapshot documentSnapshot, FirebaseFirestoreException e) {
+               // Si algú altre canvi el camp "pis" d'aquest usuari llavors
+               // passem a la següent activitat.
+                String flatId = documentSnapshot.getString("ID Flat");
+                if(flatId!=null){
+                    openTaskActivity();
+                }
             }
         });
     }
 
-    private void activity() {
+    private void openTaskActivity() {
         Intent intent = new Intent(this, TaskListActivity.class);
         startActivity(intent);
     }
