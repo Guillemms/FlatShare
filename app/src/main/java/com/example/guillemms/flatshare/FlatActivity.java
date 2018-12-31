@@ -1,6 +1,7 @@
 package com.example.guillemms.flatshare;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -29,10 +30,6 @@ public class FlatActivity extends AppCompatActivity {
     private Button create;
     private String userId;
 
-    //TODO: Mostrar id usuari
-    //TODO: Revisar constantment si l'usuari esta en un pis
-    //TODO: Preguntar per fer una array de ID d'usuaris + colección en fairebase
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -46,7 +43,20 @@ public class FlatActivity extends AppCompatActivity {
         Intent intent = getIntent();
         if(intent!=null){
             userId = intent.getStringExtra("userId");
+            ID.setText(userId);
         }
+
+        db.collection("Users").document(userId).addSnapshotListener(new EventListener<DocumentSnapshot>() {
+            @Override
+            public void onEvent(DocumentSnapshot documentSnapshot, FirebaseFirestoreException e) {
+                String flatIde = documentSnapshot.getString("ID Flat");
+                if(flatIde!=null){
+                    finish();
+                    openTaskActivity();
+                }
+            }
+        });
+
         create.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -54,11 +64,20 @@ public class FlatActivity extends AppCompatActivity {
 
                 Map<String, Object> camps = new HashMap<>();
                 camps.put("Name", flatName);
+                camps.put("ID Users", userId);
 
                 db.collection("Flats").add(camps).addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
                     @Override
                     public void onSuccess(DocumentReference documentReference) {
+                        String flatId = documentReference.getId();
+
+                        db.collection("Users").document(userId).update("ID Flat", flatId);
+
+                        SharedPreferences prefs = getSharedPreferences("config", MODE_PRIVATE);
+                        prefs.edit().putString("flatId", flatId).commit();
+
                         Toast.makeText(FlatActivity.this, "Pis creat", Toast.LENGTH_SHORT).show();
+                        finish();
                         openTaskActivity();
                     }
                 }).addOnFailureListener(new OnFailureListener() {
@@ -69,18 +88,6 @@ public class FlatActivity extends AppCompatActivity {
                 });
 
 
-            }
-        });
-
-        db.collection("Users").document(userId).addSnapshotListener(new EventListener<DocumentSnapshot>() {
-            @Override
-            public void onEvent(DocumentSnapshot documentSnapshot, FirebaseFirestoreException e) {
-               // Si algú altre canvi el camp "pis" d'aquest usuari llavors
-               // passem a la següent activitat.
-                String flatId = documentSnapshot.getString("ID Flat");
-                if(flatId!=null){
-                    openTaskActivity();
-                }
             }
         });
     }
