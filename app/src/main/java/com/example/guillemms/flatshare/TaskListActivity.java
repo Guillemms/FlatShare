@@ -1,11 +1,15 @@
 package com.example.guillemms.flatshare;
 
+import android.content.Intent;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
@@ -128,5 +132,30 @@ public class TaskListActivity extends AppCompatActivity {
         public int getItemCount() {
             return tasks.size();
         }
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu){
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.task_menu, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.menu_newTask:
+                //Afaguir nova tasca
+                break;
+            case R.id.menu_filterTask:
+                //Filtrar les teves tasques
+                break;
+            case R.id.menu_newUser:
+                Intent intent = new Intent(this, AddTenantActivity.class);
+                intent.putExtra("lastActivity", 2);
+                startActivity(intent);
+                break;
+        }
+        return true;
     }
 }

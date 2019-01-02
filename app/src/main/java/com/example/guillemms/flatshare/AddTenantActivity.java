@@ -14,12 +14,15 @@ import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.EventListener;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.FirebaseFirestoreException;
 import com.google.firebase.firestore.QuerySnapshot;
+import com.google.firebase.firestore.SetOptions;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -32,6 +35,7 @@ public class AddTenantActivity extends AppCompatActivity {
     private Button addT;
     private String flatId;
     private int lact;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -52,7 +56,9 @@ public class AddTenantActivity extends AppCompatActivity {
                 final String userId = ID.getText().toString();
 
                 SharedPreferences prefs = getSharedPreferences("config", MODE_PRIVATE);
-                flatId = prefs.getString("FlatId", null);
+                flatId = prefs.getString("flatId", "");
+
+
 
                 final DocumentReference docRef = db.collection("Users").document(userId);
                 docRef.get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
@@ -62,7 +68,11 @@ public class AddTenantActivity extends AppCompatActivity {
                             DocumentSnapshot document = task.getResult();
                             if (document.exists()) {
                                 docRef.update("ID Flat", flatId);
-                                //Afaguir id usuari a array de ids del pis
+
+                                /*Map<String, Object> camps = new HashMap<>();
+                                camps.put("ID Users", userId);
+
+                                db.collection("Flats").document(flatId).update(camps);*/
                                 finish();
                                 returnLastActivity(lact);
                             } else {

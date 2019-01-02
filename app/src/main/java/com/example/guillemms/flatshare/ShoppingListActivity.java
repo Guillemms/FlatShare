@@ -65,7 +65,7 @@ public class ShoppingListActivity extends AppCompatActivity {
 
 
     }
-/*
+
     @Override
     public boolean onCreateOptionsMenu(Menu menu){
         MenuInflater inflater = getMenuInflater();
@@ -74,20 +74,20 @@ public class ShoppingListActivity extends AppCompatActivity {
     }
 
     @Override
-    public boolean onOptionsItemSelected(MenuItem item){
-        switch (item.getItemId()){
-            case R.id.menuNewItem:
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.menu_newItem:
                 //Afaguir nou item
                 break;
-            case R.id.menuFilter:
+            case R.id.menu_filterItem:
                 //Filtrar els teus items comprats
                 break;
-            case R.id.menuNewUser:
+            case R.id.menu_newUser:
                 Intent intent = new Intent(this, AddTenantActivity.class);
+                intent.putExtra("lastActivity", 1);
                 startActivity(intent);
                 break;
         }
         return true;
     }
-    */
 }

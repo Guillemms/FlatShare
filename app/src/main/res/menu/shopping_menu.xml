@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item
+        android:id="@+id/menu_newItem"
+        android:title="Nou producte" />
+    <item
+        android:id="@+id/menu_filterItem"
+        android:title="Filtrar productes" />
+    <item
+        android:id="@+id/menu_newUser"
+        android:title="Afegir usuari" />
+</menu>
