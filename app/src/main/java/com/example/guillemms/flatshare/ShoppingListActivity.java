@@ -77,15 +77,16 @@ public class ShoppingListActivity extends AppCompatActivity {
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.menu_newItem:
-                //Afaguir nou item
+                Intent intent1 = new Intent(this, ShoppingItemActivity.class);
+                startActivity(intent1);
                 break;
             case R.id.menu_filterItem:
                 //Filtrar els teus items comprats
                 break;
             case R.id.menu_newUser:
-                Intent intent = new Intent(this, AddTenantActivity.class);
-                intent.putExtra("lastActivity", 1);
-                startActivity(intent);
+                Intent intent3 = new Intent(this, AddTenantActivity.class);
+                intent3.putExtra("lastActivity", 1);
+                startActivity(intent3);
                 break;
         }
         return true;

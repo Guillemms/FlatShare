@@ -145,15 +145,16 @@ public class TaskListActivity extends AppCompatActivity {
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.menu_newTask:
-                //Afaguir nova tasca
+                //Intent intent1 = new Intent(this, TaskActivity.class);
+                //startActivity(intent1);
                 break;
             case R.id.menu_filterTask:
                 //Filtrar les teves tasques
                 break;
             case R.id.menu_newUser:
-                Intent intent = new Intent(this, AddTenantActivity.class);
-                intent.putExtra("lastActivity", 2);
-                startActivity(intent);
+                Intent intent3 = new Intent(this, AddTenantActivity.class);
+                intent3.putExtra("lastActivity", 2);
+                startActivity(intent3);
                 break;
         }
         return true;

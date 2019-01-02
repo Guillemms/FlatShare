@@ -51,6 +51,8 @@ public class FlatActivity extends AppCompatActivity {
             public void onEvent(DocumentSnapshot documentSnapshot, FirebaseFirestoreException e) {
                 String flatIde = documentSnapshot.getString("ID Flat");
                 if(flatIde!=null){
+                    SharedPreferences prefs = getSharedPreferences("config", MODE_PRIVATE);
+                    prefs.edit().putString("flatId", flatIde).commit();
                     finish();
                     openTaskActivity();
                 }
