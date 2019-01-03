@@ -1,69 +1,177 @@
 package com.example.guillemms.flatshare;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.OnFailureListener;
-import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
-import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.EventListener;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.FirebaseFirestoreException;
+import com.google.firebase.firestore.QueryDocumentSnapshot;
+import com.google.firebase.firestore.QuerySnapshot;
 
-import java.util.HashMap;
+import java.util.ArrayList;
 import java.util.Map;
 
 public class ShoppingListActivity extends AppCompatActivity {
 
-    //Conectes amb la Firebase, necessari per cada activitat
     private FirebaseFirestore db = FirebaseFirestore.getInstance();
-
-    private TextView hola;
+    private ArrayList<Map> items;
+    private RecyclerView itemsRV;
+    private String flatId;
+    private String userId;
+    private String userName;
+    private TextView userNameDebt;
+    private TextView userDebt;
+    private Button goTask;
+    private Adapter adapter = new Adapter();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_shopping_list);
 
-       /*Forma de obtenir la info de Firebase
-        db.collection("pisos").document("WExoO2OJvJGWPlAmBZLd").addSnapshotListener(new EventListener<DocumentSnapshot>() {
+        SharedPreferences prefs = getSharedPreferences("config", MODE_PRIVATE);
+        flatId = prefs.getString("flatId", "");
+        userId = prefs.getString("userId", "");
+        items = new ArrayList<>();
+        itemsRV = findViewById(R.id.RV_Item);
+        itemsRV.setLayoutManager(new LinearLayoutManager(this));
+        userNameDebt = findViewById(R.id.user_name);
+        userDebt = findViewById(R.id.user_debt);
+        goTask = findViewById(R.id.task_btn);
+
+        goTask.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onEvent(DocumentSnapshot documentSnapshot, FirebaseFirestoreException e) {
-                String adresa = documentSnapshot.getString("adreça");
-                //hola.setText(adresa);
+            public void onClick(View view) {
+                openTaskActivity();
             }
         });
 
-        Forma de introduir dades a Firebase
-        Map<String, Object> camps = new HashMap<>();
-        camps.put("adreça", "Colom 1");
-        camps.put("numincquilins", 4);
-
-        db.collection("pisos").add(camps).addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
+        db.collection("Users").document(userId).addSnapshotListener(new EventListener<DocumentSnapshot>() {
             @Override
-            public void onSuccess(DocumentReference documentReference) {
-                Toast.makeText(ShoppingListActivity.this, "Pis gravat", Toast.LENGTH_SHORT).show();
+            public void onEvent(DocumentSnapshot documentSnapshot, FirebaseFirestoreException e) {
+                String name = documentSnapshot.getString("Name");
+                userNameDebt.setText(name);
+                String debt = documentSnapshot.getString("Debt");
+                userDebt.setText(debt);
             }
-        }).addOnFailureListener(new OnFailureListener() {
+        });
+
+        itemsRV.setAdapter(adapter);
+
+        db.collection("Flats").document(flatId).collection("ShoppingItem")
+                .orderBy("Buy").get().addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
             @Override
-            public void onFailure(@NonNull Exception e) {
-                Toast.makeText(ShoppingListActivity.this, "Fallo al gravar pis", Toast.LENGTH_SHORT).show();
+            public void onComplete(@NonNull com.google.android.gms.tasks.Task<QuerySnapshot> task) {
+                if (task.isSuccessful()) {
+                    for (QueryDocumentSnapshot document : task.getResult()) {
+                        Map flatItem = document.getData();
+                        items.add(flatItem);
+                        adapter.notifyItemInserted(items.size()-1);
+                    }
+                } else {
+                    Log.d("test", "Error getting documents: ", task.getException());
+                }
             }
-        });*/
+        });
+    }
 
+    private void OnlyThisUser(){
+        items = new ArrayList<>();
+        db.collection("Flats").document(flatId).collection("ShoppingItem").whereArrayContains("ID User", userId)
+                .orderBy("Buy").get().addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+            @Override
+            public void onComplete(@NonNull com.google.android.gms.tasks.Task<QuerySnapshot> task) {
+                if (task.isSuccessful()) {
+                    for (QueryDocumentSnapshot document : task.getResult()) {
+                        Map flatItem = document.getData();
+                        items.add(flatItem);
+                        adapter.notifyItemInserted(items.size()-1);
+                    }
+                } else {
+                    Log.d("test", "Error getting documents: ", task.getException());
+                }
+            }
+        });
+    }
 
+    class ViewHolder extends RecyclerView.ViewHolder {
 
+        private TextView userView;
+        private TextView itemNameView;
 
+        public ViewHolder(@NonNull View itemView) {
+            super(itemView);
+
+            userView = itemView.findViewById(R.id.nameUserBuy);
+            itemNameView = itemView.findViewById(R.id.nameitem);
+        }
+    }
+
+    class Adapter extends RecyclerView.Adapter<ViewHolder> {
+        @NonNull
+        @Override
+        public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+            View itemView = getLayoutInflater()
+                    .inflate(R.layout.layout_shopping, parent, false);
+            return new ViewHolder(itemView);
+        }
+
+        @Override
+        public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
+            Map item = items.get(position);
+
+            String itemName = item.get("Name").toString();
+            String userBID = item.get("ID User").toString();
+            db.collection("Users").document(userBID).get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
+                @Override
+                public void onComplete(@NonNull Task<DocumentSnapshot> task) {
+                    Map userb = task.getResult().getData();
+                    userName = userb.get("Name").toString();
+                }
+            });
+
+            holder.itemNameView.setText(itemName);
+            holder.userView.setText(userName);
+        }
+
+        @Override
+        public int getItemCount() {
+            return items.size();
+        }
+    }
+
+    public void openDebtActivity(View v){
+        Intent DebtIntent = new Intent(this, DebtActivity.class);
+        startActivity(DebtIntent);
+    }
+
+    public void openItemActivity(View v){
+        Intent ItemIntent = new Intent(this, DebtActivity.class);
+        //ItemIntent.putExtra("itemId", itemId);
+        startActivity(ItemIntent);
+    }
+
+    private void openTaskActivity() {
+        Intent TaskIntent = new Intent(this, ShoppingListActivity.class);
+        startActivity(TaskIntent);
     }
 
     @Override
@@ -77,16 +185,16 @@ public class ShoppingListActivity extends AppCompatActivity {
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.menu_newItem:
-                Intent intent1 = new Intent(this, ShoppingItemActivity.class);
-                startActivity(intent1);
+                Intent newItemIntent = new Intent(this, ShoppingItemActivity.class);
+                startActivity(newItemIntent);
                 break;
             case R.id.menu_filterItem:
-                //Filtrar els teus items comprats
+                OnlyThisUser();
                 break;
             case R.id.menu_newUser:
-                Intent intent3 = new Intent(this, AddTenantActivity.class);
-                intent3.putExtra("lastActivity", 1);
-                startActivity(intent3);
+                Intent newUserIntent = new Intent(this, AddTenantActivity.class);
+                newUserIntent.putExtra("lastActivity", 1);
+                startActivity(newUserIntent);
                 break;
         }
         return true;

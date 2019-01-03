@@ -66,7 +66,6 @@ public class FlatActivity extends AppCompatActivity {
 
                 Map<String, Object> camps = new HashMap<>();
                 camps.put("Name", flatName);
-                camps.put("ID Users", userId);
 
                 db.collection("Flats").add(camps).addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
                     @Override

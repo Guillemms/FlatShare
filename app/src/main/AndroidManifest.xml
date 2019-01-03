@@ -20,7 +20,8 @@
         <activity android:name=".AddTenantActivity" />
         <activity android:name=".FlatActivity" />
         <activity android:name=".RegisterUserActivity" />
-        <activity android:name=".TaskActivity"></activity>
+        <activity android:name=".TaskActivity" />
+        <activity android:name=".DebtActivity"></activity>
     </application>
 
 </manifest>
