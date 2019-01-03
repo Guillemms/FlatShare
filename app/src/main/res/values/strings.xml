@@ -4,4 +4,14 @@
     <string name="email">Email</string>
     <string name="registrarse">Registrar-se</string>
     <string name="entrar">Entrar</string>
+    <string name="TaskName">Task name</string>
+    <string name="TaskDescription">Task description</string>
+    <string name="Save">Save</string>
+    <string-array name="periodicity_array">
+        <item>No repeat</item>
+        <item>Weekly</item>
+        <item>2 weeks</item>
+        <item>Mars</item>
+        <item>Monthly</item>
+    </string-array>
 </resources>

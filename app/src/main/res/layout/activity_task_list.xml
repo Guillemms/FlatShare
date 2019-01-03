@@ -9,8 +9,21 @@
     <android.support.v7.widget.RecyclerView
         android:id="@+id/tasklist_recyclerView"
         android:layout_width="0dp"
-        android:layout_height="376dp"
+        android:layout_height="0dp"
+        app:layout_constraintBottom_toTopOf="@+id/shop_button"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="parent"
+        tools:listitem="@layout/layout_task" />
+
+    <Button
+        android:id="@+id/shop_button"
+        android:layout_width="0dp"
+        android:layout_height="70dp"
+        android:background="?attr/colorPrimary"
+        android:text="Go to ShoppingList"
+        android:textAppearance="@style/TextAppearance.AppCompat.Inverse"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
 </android.support.constraint.ConstraintLayout>
