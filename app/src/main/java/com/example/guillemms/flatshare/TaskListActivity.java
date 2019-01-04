@@ -75,10 +75,7 @@ public class TaskListActivity extends AppCompatActivity {
 
         taskListRecycler.setAdapter(adapter);
 
-        FirebaseFirestoreSettings settings = new FirebaseFirestoreSettings.Builder()
-                .setTimestampsInSnapshotsEnabled(true)
-                .build();
-        db.setFirestoreSettings(settings);
+
 
         final SharedPreferences prefs = getSharedPreferences("config", MODE_PRIVATE);
         userId = prefs.getString("userId", null);

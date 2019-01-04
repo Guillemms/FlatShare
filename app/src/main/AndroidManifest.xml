@@ -9,19 +9,21 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity android:name=".TaskListActivity">
+        <activity android:name=".TaskListActivity"/>
+
+        <activity android:name=".ShoppingListActivity" />
+        <activity android:name=".ShoppingItemActivity" />
+        <activity android:name=".AddTenantActivity" />
+        <activity android:name=".FlatActivity" />
+        <activity android:name=".RegisterUserActivity" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".ShoppingListActivity" />
-        <activity android:name=".AddTenantActivity" />
-        <activity android:name=".FlatActivity" />
-        <activity android:name=".RegisterUserActivity" />
         <activity android:name=".TaskActivity" />
-        <activity android:name=".DebtActivity"></activity>
+        <activity android:name=".DebtActivity"/>
     </application>
 
 </manifest>

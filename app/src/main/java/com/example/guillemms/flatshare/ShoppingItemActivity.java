@@ -44,7 +44,6 @@ public class ShoppingItemActivity extends AppCompatActivity {
     private String userId;
     private String lastPrice;
     private Boolean exi;
-    private Boolean select;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -74,8 +73,8 @@ public class ShoppingItemActivity extends AppCompatActivity {
                         nameItem.setText(name);
                         String detail = documentSnapshot.getString("Detail");
                         detailItem.setText(detail);
-                        String price = documentSnapshot.getString("Price");
-                        priceItem.setText(price);
+                        lastPrice = documentSnapshot.getString("Price");
+                        priceItem.setText(lastPrice);
                         boolean isbuy = documentSnapshot.getBoolean("Buy");
                         if(isbuy==true){
                             buy.setChecked(true);
@@ -87,28 +86,6 @@ public class ShoppingItemActivity extends AppCompatActivity {
             } else{
                 exi = false;
             }
-
-            buy.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-                @Override
-                public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                    if ( isChecked ) {
-                        select=true;
-                    } else{
-                        select=false;
-                        db.collection("Flats").document(flatId)
-                                .collection("ShoppingItem").document(itemId).addSnapshotListener(new EventListener<DocumentSnapshot>() {
-                            @Override
-                            public void onEvent(DocumentSnapshot documentSnapshot, FirebaseFirestoreException e) {
-                                if(documentSnapshot.exists()){
-                                    lastPrice = documentSnapshot.getString("Price");
-                                } else{
-                                    lastPrice = "0";
-                                }
-                            }
-                        });
-                    }
-                }
-            });
         }
 
         saveButton.setOnClickListener(new View.OnClickListener() {
@@ -129,69 +106,6 @@ public class ShoppingItemActivity extends AppCompatActivity {
                     camps.put("Buy", false);
                     camps.put("ID User", "");
                     camps.put("Price", "");
-                }
-
-
-                if(select==true){
-                    db.collection("Users").document(userId).addSnapshotListener(new EventListener<DocumentSnapshot>() {
-                        @Override
-                        public void onEvent(@Nullable DocumentSnapshot documentSnapshot, @Nullable FirebaseFirestoreException e) {
-                            String debt = documentSnapshot.getString("Debt");
-                            Float n = Float.valueOf(debt);
-                            Float p = Float.valueOf(itemPrice);
-
-                            Float t = n - p;
-
-                            db.collection("Users").document(userId).update("Debt", t);
-                        }
-                    });
-
-                    db.collection("Users").whereArrayContains("ID Flat", flatId).get().addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
-                                @Override
-                                public void onComplete(@NonNull com.google.android.gms.tasks.Task<QuerySnapshot> task) {
-                                    if (task.isSuccessful()) {
-                                        for (QueryDocumentSnapshot document : task.getResult()) {
-
-                                            Map users = document.getData();
-                                            Float nu = Float.valueOf(users.get("Debt").toString());
-                                            Float pu = Float.valueOf(lastPrice);
-
-                                            Float tu = nu + pu;
-                                            //db.collection("Users").document(users.getId()).update("Debt", tu);
-                                        }
-                                    }
-                                }
-                    });
-                } else if(select==false){
-                    db.collection("Users").document(userId).addSnapshotListener(new EventListener<DocumentSnapshot>() {
-                        @Override
-                        public void onEvent(@Nullable DocumentSnapshot documentSnapshot, @Nullable FirebaseFirestoreException e) {
-                            String debt = documentSnapshot.getString("Debt");
-                            Float n = Float.valueOf(debt);
-                            Float p = Float.valueOf(itemPrice);
-
-                            Float t = p + n;
-
-                            db.collection("Users").document(userId).update("Debt", t);
-                        }
-                    });
-
-                    db.collection("Users").whereArrayContains("ID Flat", flatId).get().addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
-                        @Override
-                        public void onComplete(@NonNull com.google.android.gms.tasks.Task<QuerySnapshot> task) {
-                            if (task.isSuccessful()) {
-                                for (QueryDocumentSnapshot document : task.getResult()) {
-
-                                    Map users = document.getData();
-                                    Float nu = Float.valueOf(users.get("Debt").toString());
-                                    Float pu = Float.valueOf(lastPrice);
-
-                                    Float tu = pu - nu;
-                                    //db.collection("Users").document(users.getId()).update("Debt", tu);
-                                }
-                            }
-                        }
-                    });
                 }
 
                 if(exi==true){

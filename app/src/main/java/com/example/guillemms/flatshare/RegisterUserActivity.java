@@ -14,6 +14,7 @@ import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.FirebaseFirestoreSettings;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -34,7 +35,10 @@ public class RegisterUserActivity extends AppCompatActivity {
         email_edit = findViewById(R.id.email_edit);
         entrar_button = findViewById(R.id.enter_button);
 
-
+        FirebaseFirestoreSettings settings = new FirebaseFirestoreSettings.Builder()
+                .setTimestampsInSnapshotsEnabled(true)
+                .build();
+        db.setFirestoreSettings(settings);
 
         SharedPreferences prefs = getSharedPreferences("config", MODE_PRIVATE);
         String userId = prefs.getString("userId", null);

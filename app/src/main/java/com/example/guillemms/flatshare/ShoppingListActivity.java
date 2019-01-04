@@ -61,8 +61,6 @@ public class ShoppingListActivity extends AppCompatActivity {
         userDebt = findViewById(R.id.user_debt);
         goTask = findViewById(R.id.task_btn);
 
-        userNameDebt.setText(userId);
-
         goTask.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -70,20 +68,20 @@ public class ShoppingListActivity extends AppCompatActivity {
             }
         });
 
-       /* db.collection("Users").document(userId).get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
+       db.collection("Users").document(userId).get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
             @Override
             public void onComplete(@NonNull Task<DocumentSnapshot> task) {
                 if (task.isSuccessful()) {
                     Map user = task.getResult().getData();
                     String name = user.get("Name").toString();
                     userNameDebt.setText(name);
-                    String debt = user.get("Debt").toString();
-                    userDebt.setText(debt);
+                   // String debt = user.get("Debt").toString();
+                   // userDebt.setText(debt);
                 } else {
                     Log.d("test", "Error getting documents: ", task.getException());
                 }
             }
-        });*/
+        });
 
         itemsRV.setAdapter(adapter);
 
@@ -175,13 +173,13 @@ public class ShoppingListActivity extends AppCompatActivity {
     }
 
     public void openItemActivity(View v){
-        Intent ItemIntent = new Intent(this, DebtActivity.class);
+        Intent ItemIntent = new Intent(this, ShoppingItemActivity.class);
         //ItemIntent.putExtra("itemId", itemId);
         startActivity(ItemIntent);
     }
 
     private void openTaskActivity() {
-        Intent TaskIntent = new Intent(this, ShoppingListActivity.class);
+        Intent TaskIntent = new Intent(this, TaskListActivity.class);
         startActivity(TaskIntent);
     }
 
