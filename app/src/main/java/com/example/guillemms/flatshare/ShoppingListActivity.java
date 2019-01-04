@@ -2,6 +2,7 @@ package com.example.guillemms.flatshare;
 
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.graphics.Paint;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
@@ -45,6 +46,7 @@ public class ShoppingListActivity extends AppCompatActivity {
     private Button goTask;
     private Adapter adapter = new Adapter();
     private Map userNames;
+    private Double debt = 0.0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -95,8 +97,6 @@ public class ShoppingListActivity extends AppCompatActivity {
                     Map user = task.getResult().getData();
                     String name = user.get("Name").toString();
                     userNameDebt.setText(name);
-                    String debt = new DecimalFormat("#.##").format(user.get("Debt"));
-                    userDebt.setText(debt);
                 } else {
                     Log.d("test", "Error getting documents: ", task.getException());
                 }
@@ -114,6 +114,16 @@ public class ShoppingListActivity extends AppCompatActivity {
                 if (task.isSuccessful()) {
                     for (QueryDocumentSnapshot document : task.getResult()) {
                         Map flatItem = document.getData();
+                        if(flatItem.get("ID User").toString() != null){
+                            String pri = flatItem.get("Price").toString();
+                            Double p = Double.valueOf(pri);
+                            if(flatItem.get("ID User").toString().equals(userId)){
+                                debt = debt + p;
+                            } else{
+                                debt = debt - p;
+                            }
+                        }
+                        userDebt.setText(String.valueOf(debt));
                         items.add(flatItem);
                         adapter.notifyItemInserted(items.size()-1);
                     }
@@ -174,6 +184,7 @@ public class ShoppingListActivity extends AppCompatActivity {
             String userName = (String)userNames.get(userBID);
 
             holder.itemNameView.setText(itemName);
+            holder.itemNameView.setPaintFlags(holder.itemNameView.getPaintFlags() | Paint.STRIKE_THRU_TEXT_FLAG);
             holder.userView.setText(userName);
         }
 
