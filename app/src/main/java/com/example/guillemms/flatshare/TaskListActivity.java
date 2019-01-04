@@ -33,6 +33,7 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 
 public class TaskListActivity extends AppCompatActivity {
@@ -49,7 +50,7 @@ public class TaskListActivity extends AppCompatActivity {
     private FirebaseFirestore db = FirebaseFirestore.getInstance();
 
     //DateFormat df = DateFormat.getDateInstance();
-    Calendar cal = Calendar.getInstance();
+    Calendar cal = Calendar.getInstance(Locale.ITALIAN);
 
     String userId, flatId;
 
