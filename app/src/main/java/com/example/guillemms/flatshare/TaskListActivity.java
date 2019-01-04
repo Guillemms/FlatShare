@@ -75,37 +75,11 @@ public class TaskListActivity extends AppCompatActivity {
 
         taskListRecycler.setAdapter(adapter);
 
-
-
         final SharedPreferences prefs = getSharedPreferences("config", MODE_PRIVATE);
-        userId = prefs.getString("userId", null);
-        flatId = prefs.getString("flatId", null);
+        userId = prefs.getString("userId", "EhtvSxlbPi2VHE2aFcOH"); // Borrar
+        flatId = prefs.getString("flatId", "aspugPQibATokPjQNLTm"); // Borrar
 
-        if (flatId == null) {
-            db.collection("Users").document(userId)
-                    .get()
-                    .addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
-                        @Override
-                        public void onComplete(@NonNull Task<DocumentSnapshot> task) {
-                            if (task.isSuccessful()) {
-                                DocumentSnapshot document = task.getResult();
-                                if (document.exists()) {
-                                    //Log.d("user", "DocumentSnapshot data: " + document.getData());
-                                    Map user = document.getData();
-                                    String userFlatId = (String) user.get("ID Flat");
-                                    prefs.edit().putString("flatId", userFlatId).commit();
-                                    getTasksFromThisFlat();
-                                } else {
-                                    Log.d("user", "No such document");
-                                }
-                            } else {
-                                Log.d("user", "get failed with ", task.getException());
-                            }
-                        }
-                    });
-        } else {
-            getTasksFromThisFlat();
-        }
+        getTasksFromThisFlat();
     }
 
     @Override

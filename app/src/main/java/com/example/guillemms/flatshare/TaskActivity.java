@@ -1,5 +1,6 @@
 package com.example.guillemms.flatshare;
 
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
@@ -51,6 +52,11 @@ public class TaskActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_task);
 
+        Intent intent = getIntent();
+        if(intent != null){
+            
+        }
+
         final EditText nameEdit = findViewById(R.id.name_editText);
         final EditText descriptionEdit = findViewById(R.id.description_editText);
         final EditText dateEdit = findViewById(R.id.date_editText);
@@ -60,18 +66,6 @@ public class TaskActivity extends AppCompatActivity {
                 R.array.periodicity_array, android.R.layout.simple_spinner_item);
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         spinner.setAdapter(adapter);
-
-        /*spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                task.put("Periodicity", position);
-            }
-
-            @Override
-            public void onNothingSelected(AdapterView<?> parent) {
-                task.put("Periodicity", 0);
-            }
-        });*/
 
         Button saveButton = findViewById(R.id.save_button);
         saveButton.setOnClickListener(new View.OnClickListener() {

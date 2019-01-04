@@ -7,6 +7,7 @@
     <string name="TaskName">Task name</string>
     <string name="TaskDescription">Task description</string>
     <string name="Save">Save</string>
+    <string name="DefaultDate">dd/mm/yyyy</string>
     <string-array name="periodicity_array">
         <item>No repeat</item>
         <item>Weekly</item>

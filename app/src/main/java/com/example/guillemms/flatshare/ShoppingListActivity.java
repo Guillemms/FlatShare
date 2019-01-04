@@ -28,6 +28,7 @@ import com.google.firebase.firestore.FirebaseFirestoreException;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
 
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -39,11 +40,11 @@ public class ShoppingListActivity extends AppCompatActivity {
     private RecyclerView itemsRV;
     private String flatId;
     private String userId;
-    private String userName;
     private TextView userNameDebt;
     private TextView userDebt;
     private Button goTask;
     private Adapter adapter = new Adapter();
+    private Map userNames;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -68,6 +69,25 @@ public class ShoppingListActivity extends AppCompatActivity {
             }
         });
 
+        userNames = new HashMap<>();
+        // ! Es posible que rebi abans els items que els users i no mostri els noms
+        db.collection("Users")
+                .get()
+                .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+                    @Override
+                    public void onComplete(@NonNull Task<QuerySnapshot> task) {
+                        if (task.isSuccessful()) {
+                            for (QueryDocumentSnapshot document : task.getResult()) {
+                                String name = (String)document.getData().get("Name");
+                                userNames.put(document.getId(), name);
+                            }
+                        } else {
+                            Log.d("test", "Error getting documents: ", task.getException());
+                        }
+
+                    }
+                });
+
        db.collection("Users").document(userId).get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
             @Override
             public void onComplete(@NonNull Task<DocumentSnapshot> task) {
@@ -75,8 +95,8 @@ public class ShoppingListActivity extends AppCompatActivity {
                     Map user = task.getResult().getData();
                     String name = user.get("Name").toString();
                     userNameDebt.setText(name);
-                   // String debt = user.get("Debt").toString();
-                   // userDebt.setText(debt);
+                    String debt = new DecimalFormat("#.##").format(user.get("Debt"));
+                    userDebt.setText(debt);
                 } else {
                     Log.d("test", "Error getting documents: ", task.getException());
                 }
@@ -86,7 +106,9 @@ public class ShoppingListActivity extends AppCompatActivity {
         itemsRV.setAdapter(adapter);
 
         db.collection("Flats").document(flatId).collection("ShoppingItem")
-                .orderBy("Buy").get().addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+                .orderBy("Buy")
+                .get()
+                .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
             @Override
             public void onComplete(@NonNull com.google.android.gms.tasks.Task<QuerySnapshot> task) {
                 if (task.isSuccessful()) {
@@ -129,8 +151,8 @@ public class ShoppingListActivity extends AppCompatActivity {
         public ViewHolder(@NonNull View itemView) {
             super(itemView);
 
-            userView = itemView.findViewById(R.id.nameUserBuy);
-            itemNameView = itemView.findViewById(R.id.nameitem);
+            this.userView = itemView.findViewById(R.id.nameUserBuy);
+            this.itemNameView = itemView.findViewById(R.id.nameitem);
         }
     }
 
@@ -144,18 +166,12 @@ public class ShoppingListActivity extends AppCompatActivity {
         }
 
         @Override
-        public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
+        public void onBindViewHolder(@NonNull ViewHolder holder, final int position) {
             Map item = items.get(position);
 
             String itemName = item.get("Name").toString();
             String userBID = item.get("ID User").toString();
-            db.collection("Users").document(userBID).get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
-                @Override
-                public void onComplete(@NonNull Task<DocumentSnapshot> task) {
-                    Map userb = task.getResult().getData();
-                    userName = userb.get("Name").toString();
-                }
-            });
+            String userName = (String)userNames.get(userBID);
 
             holder.itemNameView.setText(itemName);
             holder.userView.setText(userName);
