@@ -11,6 +11,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.CheckBox;
+import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.Toast;
 
@@ -22,9 +23,13 @@ import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.EventListener;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.FirebaseFirestoreException;
+import com.google.firebase.firestore.QueryDocumentSnapshot;
+import com.google.firebase.firestore.QuerySnapshot;
 
 import java.util.HashMap;
 import java.util.Map;
+
+import javax.annotation.Nullable;
 
 public class ShoppingItemActivity extends AppCompatActivity {
 
@@ -37,7 +42,9 @@ public class ShoppingItemActivity extends AppCompatActivity {
     private String itemId;
     private String flatId;
     private String userId;
+    private String lastPrice;
     private Boolean exi;
+    private Boolean select;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -80,6 +87,28 @@ public class ShoppingItemActivity extends AppCompatActivity {
             } else{
                 exi = false;
             }
+
+            buy.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+                @Override
+                public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                    if ( isChecked ) {
+                        select=true;
+                    } else{
+                        select=false;
+                        db.collection("Flats").document(flatId)
+                                .collection("ShoppingItem").document(itemId).addSnapshotListener(new EventListener<DocumentSnapshot>() {
+                            @Override
+                            public void onEvent(DocumentSnapshot documentSnapshot, FirebaseFirestoreException e) {
+                                if(documentSnapshot.exists()){
+                                    lastPrice = documentSnapshot.getString("Price");
+                                } else{
+                                    lastPrice = "0";
+                                }
+                            }
+                        });
+                    }
+                }
+            });
         }
 
         saveButton.setOnClickListener(new View.OnClickListener() {
@@ -87,18 +116,82 @@ public class ShoppingItemActivity extends AppCompatActivity {
             public void onClick(View view) {
                 String itemName = nameItem.getText().toString();
                 String itemDetail = detailItem.getText().toString();
-                String itemPrice = priceItem.getText().toString();
+                final String itemPrice = priceItem.getText().toString();
 
                 Map<String, Object> camps = new HashMap<>();
                 camps.put("Name", itemName);
                 camps.put("Detail", itemDetail);
-                camps.put("Price", itemPrice);
                 if(buy.isChecked()) {
                     camps.put("Buy", true);
                     camps.put("ID User", userId);
+                    camps.put("Price", itemPrice);
                 } else{
                     camps.put("Buy", false);
                     camps.put("ID User", "");
+                    camps.put("Price", "");
+                }
+
+
+                if(select==true){
+                    db.collection("Users").document(userId).addSnapshotListener(new EventListener<DocumentSnapshot>() {
+                        @Override
+                        public void onEvent(@Nullable DocumentSnapshot documentSnapshot, @Nullable FirebaseFirestoreException e) {
+                            String debt = documentSnapshot.getString("Debt");
+                            Float n = Float.valueOf(debt);
+                            Float p = Float.valueOf(itemPrice);
+
+                            Float t = n - p;
+
+                            db.collection("Users").document(userId).update("Debt", t);
+                        }
+                    });
+
+                    db.collection("Users").whereArrayContains("ID Flat", flatId).get().addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+                                @Override
+                                public void onComplete(@NonNull com.google.android.gms.tasks.Task<QuerySnapshot> task) {
+                                    if (task.isSuccessful()) {
+                                        for (QueryDocumentSnapshot document : task.getResult()) {
+
+                                            Map users = document.getData();
+                                            Float nu = Float.valueOf(users.get("Debt").toString());
+                                            Float pu = Float.valueOf(lastPrice);
+
+                                            Float tu = nu + pu;
+                                            //db.collection("Users").document(users.getId()).update("Debt", tu);
+                                        }
+                                    }
+                                }
+                    });
+                } else if(select==false){
+                    db.collection("Users").document(userId).addSnapshotListener(new EventListener<DocumentSnapshot>() {
+                        @Override
+                        public void onEvent(@Nullable DocumentSnapshot documentSnapshot, @Nullable FirebaseFirestoreException e) {
+                            String debt = documentSnapshot.getString("Debt");
+                            Float n = Float.valueOf(debt);
+                            Float p = Float.valueOf(itemPrice);
+
+                            Float t = p + n;
+
+                            db.collection("Users").document(userId).update("Debt", t);
+                        }
+                    });
+
+                    db.collection("Users").whereArrayContains("ID Flat", flatId).get().addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+                        @Override
+                        public void onComplete(@NonNull com.google.android.gms.tasks.Task<QuerySnapshot> task) {
+                            if (task.isSuccessful()) {
+                                for (QueryDocumentSnapshot document : task.getResult()) {
+
+                                    Map users = document.getData();
+                                    Float nu = Float.valueOf(users.get("Debt").toString());
+                                    Float pu = Float.valueOf(lastPrice);
+
+                                    Float tu = pu - nu;
+                                    //db.collection("Users").document(users.getId()).update("Debt", tu);
+                                }
+                            }
+                        }
+                    });
                 }
 
                 if(exi==true){

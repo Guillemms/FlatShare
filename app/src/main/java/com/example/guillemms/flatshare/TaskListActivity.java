@@ -81,7 +81,7 @@ public class TaskListActivity extends AppCompatActivity {
         db.setFirestoreSettings(settings);
 
         final SharedPreferences prefs = getSharedPreferences("config", MODE_PRIVATE);
-        userId = "EhtvSxlbPi2VHE2aFcOH"; //prefs.getString("userId", null);
+        userId = prefs.getString("userId", null);
         flatId = prefs.getString("flatId", null);
 
         if (flatId == null) {

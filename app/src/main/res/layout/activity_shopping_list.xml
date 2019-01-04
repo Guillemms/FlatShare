@@ -27,7 +27,8 @@
         android:clickable="true"
         app:layout_constraintBottom_toTopOf="@+id/task_btn"
         app:layout_constraintEnd_toStartOf="@+id/user_debt"
-        app:layout_constraintStart_toStartOf="parent" />
+        app:layout_constraintStart_toStartOf="parent"
+        android:focusable="true" />
 
     <TextView
         android:id="@+id/user_debt"
@@ -39,7 +40,8 @@
         android:onClick="openDebtActivity"
         android:clickable="true"
         app:layout_constraintBottom_toTopOf="@+id/task_btn"
-        app:layout_constraintEnd_toEndOf="parent" />
+        app:layout_constraintEnd_toEndOf="parent"
+        android:focusable="true" />
 
     <Button
         android:id="@+id/task_btn"
