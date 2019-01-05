@@ -8,6 +8,9 @@ import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
@@ -19,9 +22,11 @@ import android.widget.TextView;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.android.gms.tasks.Task;
+import com.google.firebase.Timestamp;
 import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
-import com.google.firebase.firestore.FirebaseFirestoreSettings;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
 
@@ -47,25 +52,44 @@ public class TaskActivity extends AppCompatActivity {
 
     Adapter usersAdapter;
 
+    private EditText nameEdit;
+    private EditText descriptionEdit;
+    private EditText dateEdit;
+    private Spinner spinner;
+
+    SimpleDateFormat dateFormatter;
+
+    String taskId = null;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_task);
 
-        Intent intent = getIntent();
-        if(intent != null){
-            
-        }
+        final SharedPreferences prefs = getSharedPreferences("config", MODE_PRIVATE);
+        flatId = prefs.getString("flatId", "");
 
-        final EditText nameEdit = findViewById(R.id.name_editText);
-        final EditText descriptionEdit = findViewById(R.id.description_editText);
-        final EditText dateEdit = findViewById(R.id.date_editText);
-        final Spinner spinner = findViewById(R.id.periodicity_spinner);
+        dateFormatter = new SimpleDateFormat("dd/MM/yyyy", Locale.ENGLISH);
+
+        nameEdit = findViewById(R.id.name_editText);
+        descriptionEdit = findViewById(R.id.description_editText);
+        dateEdit = findViewById(R.id.date_editText);
+        spinner = findViewById(R.id.periodicity_spinner);
 
         ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(this,
                 R.array.periodicity_array, android.R.layout.simple_spinner_item);
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         spinner.setAdapter(adapter);
+
+        Intent intent = getIntent();
+        if(intent != null){
+            taskId = intent.getStringExtra("taskId");
+            if(taskId != null) {
+                fillFormWithTask(taskId);
+            } else {
+                spinner.setSelection(0);
+            }
+        }
 
         Button saveButton = findViewById(R.id.save_button);
         saveButton.setOnClickListener(new View.OnClickListener() {
@@ -88,6 +112,7 @@ public class TaskActivity extends AppCompatActivity {
                         userIds.add(user.get("id"));
                     }
                     task.put("User IDs", userIds);
+
                     saveTaskToFirestore();
                 } catch (ParseException e) {
                     e.printStackTrace();
@@ -95,14 +120,15 @@ public class TaskActivity extends AppCompatActivity {
             }
         });
 
-        FirebaseFirestoreSettings settings = new FirebaseFirestoreSettings.Builder()
-                .setTimestampsInSnapshotsEnabled(true)
-                .build();
-        db.setFirestoreSettings(settings);
+        getFlatUsers();
 
-        final SharedPreferences prefs = getSharedPreferences("config", MODE_PRIVATE);
-        flatId = prefs.getString("flatId", "");
+        RecyclerView userList = findViewById(R.id.users_recyclerView);
+        userList.setLayoutManager(new LinearLayoutManager(this));
+        usersAdapter = new Adapter();
+        userList.setAdapter(usersAdapter);
+    }
 
+    private void getFlatUsers() {
         db.collection("Users")
                 .whereEqualTo("ID Flat", flatId)
                 .get()
@@ -115,6 +141,7 @@ public class TaskActivity extends AppCompatActivity {
                                 user.put("id", document.getId());
                                 user.put("data", document.getData());
                                 flatUsers.add(user);
+                                usersAdapter.notifyItemInserted(flatUsers.size()-1);
                             }
                             onGetUsers();
                         } else {
@@ -122,33 +149,88 @@ public class TaskActivity extends AppCompatActivity {
                         }
                     }
                 });
-
-        RecyclerView userList = findViewById(R.id.users_recyclerView);
-        userList.setLayoutManager(new LinearLayoutManager(this));
-        usersAdapter = new Adapter();
-        userList.setAdapter(usersAdapter);
     }
 
-    private void saveTaskToFirestore() {
+    private void fillFormWithTask(String taskId){
         db.collection("Flats")
                 .document(flatId)
                 .collection("Tasks")
-                .add(task)
-                .addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
-                    @Override
-                    public void onSuccess(DocumentReference documentReference) {
-                        Log.d("newTask", "DocumentSnapshot written with ID: " + documentReference.getId());
-                        setResult(RESULT_OK);
-                        finish();
+                .document(taskId)
+                .get()
+                .addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
+                @Override
+                public void onComplete(@NonNull Task<DocumentSnapshot> task) {
+                    if (task.isSuccessful()) {
+                        DocumentSnapshot document = task.getResult();
+                        if (document.exists()) {
+                            Map taskData = document.getData();
+
+                            String taskName = (String)taskData.get("Name");
+                            String taskDescription = (String)taskData.get("Description");
+                            Timestamp initialTimestamp = (Timestamp) taskData.get("Initial date");
+                            Date initialDate = initialTimestamp.toDate();
+                            String taskDate = dateFormatter.format(initialDate);
+                            int periodicity = Math.round((Long)taskData.get("Periodicity"));
+
+                            nameEdit.setText(taskName);
+                            descriptionEdit.setText(taskDescription);
+                            dateEdit.setText(taskDate);
+                            spinner.setSelection(periodicity);
+
+                            Log.d("test", "DocumentSnapshot data: " + document.getData());
+                        } else {
+                            Log.d("test", "No such document");
+                        }
+                    } else {
+                        Log.d("test", "get failed with ", task.getException());
                     }
-                })
-                .addOnFailureListener(new OnFailureListener() {
-                    @Override
-                    public void onFailure(@NonNull Exception e) {
-                        Log.w("newTask", "Error adding document", e);
-                        setResult(RESULT_CANCELED);
-                    }
-                });
+                }
+        });
+    }
+
+    private void saveTaskToFirestore() {
+        if(taskId == null) {
+            db.collection("Flats")
+                    .document(flatId)
+                    .collection("Tasks")
+                    .add(task)
+                    .addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
+                        @Override
+                        public void onSuccess(DocumentReference documentReference) {
+                            Log.d("newTask", "DocumentSnapshot written with ID: " + documentReference.getId());
+                            setResult(RESULT_OK);
+                            finish();
+                        }
+                    })
+                    .addOnFailureListener(new OnFailureListener() {
+                        @Override
+                        public void onFailure(@NonNull Exception e) {
+                            Log.w("newTask", "Error adding document", e);
+                            setResult(RESULT_CANCELED);
+                        }
+                    });
+        } else {
+            db.collection("Flats")
+                    .document(flatId)
+                    .collection("Tasks")
+                    .document(taskId)
+                    .set(task)
+                    .addOnSuccessListener(new OnSuccessListener<Void>() {
+                        @Override
+                        public void onSuccess(Void aVoid) {
+                            Log.d("test", "DocumentSnapshot successfully written!");
+                            setResult(RESULT_OK);
+                            finish();
+                        }
+                    })
+                    .addOnFailureListener(new OnFailureListener() {
+                        @Override
+                        public void onFailure(@NonNull Exception e) {
+                            Log.w("test", "Error writing document", e);
+                            setResult(RESULT_CANCELED);
+                        }
+                    });
+        }
     }
 
     private void onGetUsers() {
@@ -218,6 +300,44 @@ public class TaskActivity extends AppCompatActivity {
         public int getItemCount() {
             return flatUsers.size();
         }
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu){
+        if(taskId != null) {
+            MenuInflater inflater = getMenuInflater();
+            inflater.inflate(R.menu.edit_task_menu, menu);
+        }
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.remove_task:
+                db.collection("Flats")
+                        .document(flatId)
+                        .collection("Tasks")
+                        .document(taskId)
+                        .delete()
+                        .addOnSuccessListener(new OnSuccessListener<Void>() {
+                            @Override
+                            public void onSuccess(Void aVoid) {
+                                Log.d("test", "DocumentSnapshot successfully deleted!");
+                                setResult(RESULT_OK);
+                                finish();
+                            }
+                        })
+                        .addOnFailureListener(new OnFailureListener() {
+                            @Override
+                            public void onFailure(@NonNull Exception e) {
+                                Log.w("test", "Error deleting document", e);
+                                setResult(RESULT_CANCELED);
+                            }
+                        });
+                break;
+        }
+        return true;
     }
 
 }

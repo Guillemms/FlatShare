@@ -20,7 +20,7 @@
         android:id="@+id/shop_button"
         android:layout_width="0dp"
         android:layout_height="70dp"
-        android:background="?attr/colorPrimary"
+        android:background="@color/colorPrimary"
         android:text="Go to ShoppingList"
         android:textAppearance="@style/TextAppearance.AppCompat.Inverse"
         app:layout_constraintBottom_toBottomOf="parent"

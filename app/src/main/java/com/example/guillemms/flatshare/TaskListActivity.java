@@ -18,17 +18,13 @@ import android.widget.Button;
 import android.widget.TextView;
 
 import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.Timestamp;
-import com.google.firebase.firestore.DocumentReference;
-import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.FirebaseFirestoreSettings;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
 
-import java.text.DateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
@@ -40,12 +36,11 @@ public class TaskListActivity extends AppCompatActivity {
 
     private static final int NEW_TASK = 0;
     private static final int EDIT_TASK = 1;
-    private Button btnShop;
 
-    private ArrayList<Map> tasks;
+    private ArrayList<DisplayTask> tasks = new ArrayList<>();
+
     private RecyclerView taskListRecycler;
     private Adapter adapter = new Adapter();
-    private int lastDifferentWeekNum = -1;
 
     private FirebaseFirestore db = FirebaseFirestore.getInstance();
 
@@ -54,13 +49,25 @@ public class TaskListActivity extends AppCompatActivity {
 
     String userId, flatId;
 
+    Map userNames = new HashMap<>();
+
+    private int numberOfWeeksAhead = 5;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_task_list);
 
-        btnShop = findViewById(R.id.shop_button);
+        FirebaseFirestoreSettings settings = new FirebaseFirestoreSettings.Builder()
+                .setTimestampsInSnapshotsEnabled(true)
+                .build();
+        db.setFirestoreSettings(settings);
 
+        final SharedPreferences prefs = getSharedPreferences("config", MODE_PRIVATE);
+        userId = prefs.getString("userId", ""); // Borrar EhtvSxlbPi2VHE2aFcOH
+        flatId = prefs.getString("flatId", ""); // Borrar aspugPQibATokPjQNLTm
+
+        Button btnShop = findViewById(R.id.shop_button);
         btnShop.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -68,18 +75,28 @@ public class TaskListActivity extends AppCompatActivity {
             }
         });
 
-        tasks = new ArrayList<>();
-
         taskListRecycler = findViewById(R.id.tasklist_recyclerView);
         taskListRecycler.setLayoutManager(new LinearLayoutManager(this));
-
         taskListRecycler.setAdapter(adapter);
 
-        final SharedPreferences prefs = getSharedPreferences("config", MODE_PRIVATE);
-        userId = prefs.getString("userId", "EhtvSxlbPi2VHE2aFcOH"); // Borrar
-        flatId = prefs.getString("flatId", "aspugPQibATokPjQNLTm"); // Borrar
+        // ! Es posible que rebi abans els items que els users i no mostri els noms
+        db.collection("Users")
+                .get()
+                .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+                    @Override
+                    public void onComplete(@NonNull Task<QuerySnapshot> task) {
+                        if (task.isSuccessful()) {
+                            for (QueryDocumentSnapshot document : task.getResult()) {
+                                String name = (String)document.getData().get("Name");
+                                userNames.put(document.getId(), name);
+                            }
+                            getTasksFromThisFlat();
+                        } else {
+                            Log.d("test", "Error getting documents: ", task.getException());
+                        }
 
-        getTasksFromThisFlat();
+                    }
+                });
     }
 
     @Override
@@ -88,6 +105,7 @@ public class TaskListActivity extends AppCompatActivity {
             case NEW_TASK:
                 if(resultCode == RESULT_OK){
                     getTasksFromThisFlat();
+                    Log.d("result", "nice");
                 }
                 break;
             case EDIT_TASK:
@@ -100,45 +118,77 @@ public class TaskListActivity extends AppCompatActivity {
         }
     }
 
-    private void getTasksFromThisFlat() {
-        tasks = new ArrayList<>();
-        db.collection("Flats")
-                .document(flatId)
-                .collection("Tasks")
-                .orderBy("Initial date")
-                .get()
-                .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
-                    @Override
-                    public void onComplete(@NonNull com.google.android.gms.tasks.Task<QuerySnapshot> task) {
-                        if (task.isSuccessful()) {
-                            for (QueryDocumentSnapshot document : task.getResult()) {
-                                Map flatTask = document.getData();
-                                tasks.add(flatTask);
-                                adapter.notifyItemInserted(tasks.size()-1);
-                            }
-                        } else {
-                            Log.d("test", "Error getting documents: ", task.getException());
-                        }
-                    }
-                });
+    private void clearTaskList() {
+        int numTasks = tasks.size();
+        tasks.clear();
+        adapter.notifyItemRangeRemoved(0, numTasks);
     }
 
-    private void getTasksFromThisUser() {
-        tasks = new ArrayList<>();
+    private void getTasksFromThisFlat() {
+        clearTaskList();
         db.collection("Flats")
                 .document(flatId)
                 .collection("Tasks")
-                .whereArrayContains("User IDs", userId)
                 .orderBy("Initial date")
                 .get()
                 .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
                     @Override
                     public void onComplete(@NonNull com.google.android.gms.tasks.Task<QuerySnapshot> task) {
                         if (task.isSuccessful()) {
-                            for (QueryDocumentSnapshot document : task.getResult()) {
-                                Map flatTask = document.getData();
-                                tasks.add(flatTask);
-                                adapter.notifyItemInserted(tasks.size()-1);
+                            int lastWeek = -1;
+                            cal.setTime(new Date());
+                            int thisWeek = cal.get(Calendar.WEEK_OF_YEAR);
+                            for (int i = 0; i < numberOfWeeksAhead; i++) {
+                                for (QueryDocumentSnapshot document : task.getResult()) {
+                                    Map flatTask = document.getData();
+
+                                    String taskId = document.getId();
+                                    Timestamp initialTimestamp = (Timestamp) flatTask.get("Initial date");
+                                    Date initialDate = initialTimestamp.toDate();
+                                    cal.setTime(initialDate);
+                                    int startWeek = cal.get(Calendar.WEEK_OF_YEAR);
+
+                                    ArrayList taskUserIds = (ArrayList) flatTask.get("User IDs");
+
+                                    int periodicity = Math.round((long) flatTask.get("Periodicity"));
+
+                                    if (periodicity == 0) {
+                                        int absWeek = thisWeek + i;
+                                        boolean hasTaskThisWeek = absWeek == startWeek;
+                                        if (hasTaskThisWeek) {
+                                            String taskUserId = (String) taskUserIds.get(0);
+                                            String userName = (String) userNames.get(taskUserId);
+                                            String taskName = (String) flatTask.get("Name");
+                                            String weekString = String.valueOf(absWeek);
+
+                                            boolean isWeekDisplayed = absWeek != lastWeek;
+                                            lastWeek = absWeek;
+
+                                            tasks.add(new DisplayTask(taskName, userName, weekString, isWeekDisplayed, taskId));
+
+                                            adapter.notifyItemInserted(tasks.size() - 1);
+                                        }
+                                    } else {
+                                        int absWeek = thisWeek + i;
+                                        int relWeek = absWeek - startWeek;
+                                        boolean hasTaskThisWeek = (relWeek % periodicity == 0) && relWeek >= 0;
+                                        if (hasTaskThisWeek) {
+                                            int idx = relWeek % taskUserIds.size();
+                                            String taskUserId = (String) taskUserIds.get(idx);
+                                            String userName = (String) userNames.get(taskUserId);
+                                            String taskName = (String) flatTask.get("Name");
+                                            String weekString = String.valueOf(absWeek);
+
+                                            boolean isWeekDisplayed = absWeek != lastWeek;
+                                            lastWeek = absWeek;
+
+                                            tasks.add(new DisplayTask(taskName, userName, weekString, isWeekDisplayed, taskId));
+
+                                            adapter.notifyItemInserted(tasks.size() - 1);
+                                        }
+
+                                    }
+                                }
                             }
                         } else {
                             Log.d("test", "Error getting documents: ", task.getException());
@@ -151,12 +201,23 @@ public class TaskListActivity extends AppCompatActivity {
 
         private TextView dateView;
         private TextView taskNameView;
+        private TextView userNameView;
+        private View weekBackground;
 
         public ViewHolder(@NonNull View itemView) {
             super(itemView);
 
             dateView = itemView.findViewById(R.id.date_textView);
             taskNameView = itemView.findViewById(R.id.task_textView);
+            userNameView = itemView.findViewById(R.id.user_textView);
+            weekBackground = itemView.findViewById(R.id.week_bg);
+
+            itemView.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    onTaskClick(getAdapterPosition());
+                }
+            });
         }
     }
 
@@ -171,26 +232,15 @@ public class TaskListActivity extends AppCompatActivity {
 
         @Override
         public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
-            Map task = tasks.get(position);
-            Timestamp initialTimestamp = (Timestamp) task.get("Initial date");
-            Date initialDate = initialTimestamp.toDate();
+            DisplayTask displayTask = tasks.get(position);
 
-            cal.setTime(initialDate);
-            int week = cal.get(Calendar.WEEK_OF_YEAR);
+            holder.dateView.setText(displayTask.getWeekStr());
+            holder.taskNameView.setText(displayTask.getTaskName());
+            holder.userNameView.setText(displayTask.getUserName());
 
-            //String initialDateString = df.format(initialDate);
-
-            String taskInfo = task.get("Name").toString();
-
-            holder.dateView.setText("Week: " + week);
-            holder.taskNameView.setText(taskInfo);
-
-            boolean isDateDisplayed = week == lastDifferentWeekNum;
-
-            if(isDateDisplayed) {
+            if(!displayTask.isWeekDisplayed()) {
                 holder.dateView.setVisibility(View.GONE);
-            } else {
-                lastDifferentWeekNum = week;
+                holder.weekBackground.setVisibility(View.GONE);
             }
         }
 
@@ -198,6 +248,13 @@ public class TaskListActivity extends AppCompatActivity {
         public int getItemCount() {
             return tasks.size();
         }
+    }
+
+    public void onTaskClick(int i){
+        Intent intent = new Intent(this, TaskActivity.class);
+        String taskId = tasks.get(i).getTaskId();
+        intent.putExtra("taskId", taskId);
+        startActivityForResult(intent, EDIT_TASK);
     }
 
     private void onShopButtonClick() {
@@ -218,9 +275,6 @@ public class TaskListActivity extends AppCompatActivity {
             case R.id.menu_newTask:
                 Intent newIntent = new Intent(this, TaskActivity.class);
                 startActivityForResult(newIntent, NEW_TASK);
-                break;
-            case R.id.menu_filterTask:
-                getTasksFromThisUser();
                 break;
             case R.id.menu_newUser:
                 Intent newUserIntent = new Intent(this, AddTenantActivity.class);

@@ -4,11 +4,8 @@
 
     <item
         android:id="@+id/menu_newTask"
-        android:title="Nova tasca" />
-    <item
-        android:id="@+id/menu_filterTask"
-        android:title="Filtrar tasques" />
+        android:title="New task" />
     <item
         android:id="@+id/menu_newUser"
-        android:title="Afegir usuari" />
+        android:title="Add user" />
 </menu>
