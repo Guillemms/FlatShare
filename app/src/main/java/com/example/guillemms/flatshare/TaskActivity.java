@@ -239,7 +239,6 @@ public class TaskActivity extends AppCompatActivity {
 
     // Recyclerview of users
     class ViewHolder extends RecyclerView.ViewHolder {
-        TextView positionView;
         TextView userView;
         Button upButton;
         Button downButton;
@@ -247,7 +246,6 @@ public class TaskActivity extends AppCompatActivity {
         public ViewHolder(@NonNull View itemView) {
             super(itemView);
 
-            this.positionView = itemView.findViewById(R.id.position_textView);
             this.userView = itemView.findViewById(R.id.user_textView);
             this.upButton = itemView.findViewById(R.id.up_button);
             this.downButton = itemView.findViewById(R.id.down_button);
@@ -274,8 +272,6 @@ public class TaskActivity extends AppCompatActivity {
         if(!noChange) {
             Collections.swap(flatUsers, pos, nextPos);
             usersAdapter.notifyItemMoved(pos, nextPos);
-            //usersAdapter.notifyItemChanged(pos);
-            //usersAdapter.notifyItemChanged(nextPos);
         }
     }
 
@@ -293,7 +289,6 @@ public class TaskActivity extends AppCompatActivity {
             Map user = (Map) flatUsers.get(i).get("data");
             String userName = (String) user.get("Name");
             viewHolder.userView.setText(userName);
-            viewHolder.positionView.setText(String.valueOf(i));
         }
 
         @Override

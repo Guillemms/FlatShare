@@ -25,6 +25,11 @@ import com.google.firebase.firestore.FirebaseFirestoreSettings;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
 
+import java.text.SimpleDateFormat;
+import java.time.DayOfWeek;
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.time.temporal.TemporalAdjusters;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
@@ -44,7 +49,7 @@ public class TaskListActivity extends AppCompatActivity {
 
     private FirebaseFirestore db = FirebaseFirestore.getInstance();
 
-    //DateFormat df = DateFormat.getDateInstance();
+    SimpleDateFormat df = new SimpleDateFormat("dd/MM", Locale.ITALIAN);
     Calendar cal = Calendar.getInstance(Locale.ITALIAN);
 
     String userId, flatId;
@@ -105,7 +110,6 @@ public class TaskListActivity extends AppCompatActivity {
             case NEW_TASK:
                 if(resultCode == RESULT_OK){
                     getTasksFromThisFlat();
-                    Log.d("result", "nice");
                 }
                 break;
             case EDIT_TASK:
@@ -152,14 +156,18 @@ public class TaskListActivity extends AppCompatActivity {
 
                                     int periodicity = Math.round((long) flatTask.get("Periodicity"));
 
+                                    int absWeek = thisWeek + i;
+
+                                    Calendar weekCal = Calendar.getInstance();
+                                    weekCal.add(Calendar.WEEK_OF_YEAR, i);
+                                    String weekString = getWeekString(weekCal);
+
                                     if (periodicity == 0) {
-                                        int absWeek = thisWeek + i;
                                         boolean hasTaskThisWeek = absWeek == startWeek;
                                         if (hasTaskThisWeek) {
                                             String taskUserId = (String) taskUserIds.get(0);
                                             String userName = (String) userNames.get(taskUserId);
                                             String taskName = (String) flatTask.get("Name");
-                                            String weekString = String.valueOf(absWeek);
 
                                             boolean isWeekDisplayed = absWeek != lastWeek;
                                             lastWeek = absWeek;
@@ -169,7 +177,6 @@ public class TaskListActivity extends AppCompatActivity {
                                             adapter.notifyItemInserted(tasks.size() - 1);
                                         }
                                     } else {
-                                        int absWeek = thisWeek + i;
                                         int relWeek = absWeek - startWeek;
                                         boolean hasTaskThisWeek = (relWeek % periodicity == 0) && relWeek >= 0;
                                         if (hasTaskThisWeek) {
@@ -177,7 +184,6 @@ public class TaskListActivity extends AppCompatActivity {
                                             String taskUserId = (String) taskUserIds.get(idx);
                                             String userName = (String) userNames.get(taskUserId);
                                             String taskName = (String) flatTask.get("Name");
-                                            String weekString = String.valueOf(absWeek);
 
                                             boolean isWeekDisplayed = absWeek != lastWeek;
                                             lastWeek = absWeek;
@@ -195,6 +201,15 @@ public class TaskListActivity extends AppCompatActivity {
                         }
                     }
                 });
+    }
+
+    private String getWeekString(Calendar cal) {
+        int dayOfWeek = cal.get(Calendar.DAY_OF_WEEK);
+        cal.add(Calendar.DAY_OF_WEEK, 2-dayOfWeek);
+        String monday = df.format(cal.getTime());
+        cal.add(Calendar.DAY_OF_WEEK, 7-dayOfWeek);
+        String sunday = df.format(cal.getTime());
+        return monday+" - "+sunday;
     }
 
     class ViewHolder extends RecyclerView.ViewHolder {

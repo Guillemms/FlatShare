@@ -9,9 +9,9 @@
     <string name="Save">Save</string>
     <string name="DefaultDate">dd/mm/yyyy</string>
     <string-array name="periodicity_array">
-        <item>Once</item>
+        <item>Only once</item>
         <item>Weekly</item>
-        <item>2 weeks</item>
-        <item>3 weeks</item>
+        <item>Every 2 weeks</item>
+        <item>Every 3 weeks</item>
     </string-array>
 </resources>
