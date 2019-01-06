@@ -5,6 +5,7 @@ import android.content.SharedPreferences;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -16,6 +17,8 @@ import android.widget.EditText;
 import android.widget.Toast;
 
 import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.DocumentReference;
@@ -65,24 +68,38 @@ public class ShoppingItemActivity extends AppCompatActivity {
             itemId = intent.getStringExtra("itemId");
             if(itemId!=null){
                 exi = true;
-                db.collection("Flats").document(flatId)
-                        .collection("ShoppingItem").document(itemId).addSnapshotListener(new EventListener<DocumentSnapshot>() {
+                db.collection("Flats")
+                    .document(flatId)
+                    .collection("ShoppingItem")
+                    .document(itemId)
+                    .get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
                     @Override
-                    public void onEvent(DocumentSnapshot documentSnapshot, FirebaseFirestoreException e) {
-                        String name = documentSnapshot.getString("Name");
-                        nameItem.setText(name);
-                        String detail = documentSnapshot.getString("Detail");
-                        detailItem.setText(detail);
-                        lastPrice = documentSnapshot.getString("Price");
-                        priceItem.setText(lastPrice);
-                        boolean isbuy = documentSnapshot.getBoolean("Buy");
-                        if(isbuy==true){
-                            buy.setChecked(true);
-                        } else{
-                            buy.setChecked(false);
+                    public void onComplete(@NonNull Task<DocumentSnapshot> task) {
+                        if (task.isSuccessful()) {
+                            DocumentSnapshot document = task.getResult();
+                            if (document.exists()) {
+                                String name = document.getString("Name");
+                                nameItem.setText(name);
+                                String detail = document.getString("Detail");
+                                detailItem.setText(detail);
+                                lastPrice = document.getString("Price");
+                                priceItem.setText(lastPrice);
+                                boolean isbuy = document.getBoolean("Buy");
+                                if(isbuy==true){
+                                    buy.setChecked(true);
+                                } else{
+                                    buy.setChecked(false);
+                                }
+                            } else {
+                                Log.d("item", "No such document");
+                            }
+                        } else {
+                            Log.d("item", "get failed with ", task.getException());
                         }
                     }
                 });
+
+
             } else{
                 exi = false;
             }
@@ -109,15 +126,46 @@ public class ShoppingItemActivity extends AppCompatActivity {
                 }
 
                 if(exi==true){
-                    db.collection("Flats").document(flatId)
-                            .collection("ShoppingItem").document(itemId).set(camps);
-                    finish();
-                    openShoppingListActivity();
+                    db.collection("Flats")
+                            .document(flatId)
+                            .collection("ShoppingItem")
+                            .document(itemId)
+                            .set(camps)
+                            .addOnSuccessListener(new OnSuccessListener<Void>() {
+                                @Override
+                                public void onSuccess(Void aVoid) {
+                                    Log.d("", "DocumentSnapshot successfully written!");
+                                    setResult(RESULT_OK);
+                                    finish();
+                                    openShoppingListActivity();
+                                }
+                            })
+                            .addOnFailureListener(new OnFailureListener() {
+                                @Override
+                                public void onFailure(@NonNull Exception e) {
+                                    Log.w("", "Error writing document", e);
+                                }
+                            });
                 } else {
-                    db.collection("Flats").document(flatId)
-                            .collection("ShoppingItem").add(camps);
-                    finish();
-                    openShoppingListActivity();
+                    db.collection("Flats")
+                            .document(flatId)
+                            .collection("ShoppingItem")
+                            .add(camps)
+                            .addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
+                                @Override
+                                public void onSuccess(DocumentReference documentReference) {
+                                    Log.d("", "DocumentSnapshot written with ID: " + documentReference.getId());
+                                    setResult(RESULT_OK);
+                                    finish();
+                                    openShoppingListActivity();
+                                }
+                            })
+                            .addOnFailureListener(new OnFailureListener() {
+                                @Override
+                                public void onFailure(@NonNull Exception e) {
+                                    Log.w("", "Error adding document", e);
+                                }
+                            });;
                 }
             }
         });
@@ -130,8 +178,10 @@ public class ShoppingItemActivity extends AppCompatActivity {
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu){
-        MenuInflater inflater = getMenuInflater();
-        inflater.inflate(R.menu.new_item, menu);
+        if(itemId != null) {
+            MenuInflater inflater = getMenuInflater();
+            inflater.inflate(R.menu.new_item, menu);
+        }
         return true;
     }
 
@@ -139,7 +189,26 @@ public class ShoppingItemActivity extends AppCompatActivity {
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.delete:
-                //Borrar producte
+                db.collection("Flats")
+                        .document(flatId)
+                        .collection("ShoppingItem")
+                        .document(itemId)
+                        .delete()
+                        .addOnSuccessListener(new OnSuccessListener<Void>() {
+                            @Override
+                            public void onSuccess(Void aVoid) {
+                                Log.d("test", "DocumentSnapshot successfully deleted!");
+                                setResult(RESULT_OK);
+                                finish();
+                            }
+                        })
+                        .addOnFailureListener(new OnFailureListener() {
+                            @Override
+                            public void onFailure(@NonNull Exception e) {
+                                Log.w("test", "Error deleting document", e);
+                                setResult(RESULT_CANCELED);
+                            }
+                        });
                 break;
         }
         return true;

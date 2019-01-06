@@ -173,8 +173,6 @@ public class TaskListActivity extends AppCompatActivity {
                                             lastWeek = absWeek;
 
                                             tasks.add(new DisplayTask(taskName, userName, weekString, isWeekDisplayed, taskId));
-
-                                            adapter.notifyItemInserted(tasks.size() - 1);
                                         }
                                     } else {
                                         int relWeek = absWeek - startWeek;
@@ -189,13 +187,12 @@ public class TaskListActivity extends AppCompatActivity {
                                             lastWeek = absWeek;
 
                                             tasks.add(new DisplayTask(taskName, userName, weekString, isWeekDisplayed, taskId));
-
-                                            adapter.notifyItemInserted(tasks.size() - 1);
                                         }
 
                                     }
                                 }
                             }
+                            adapter.notifyItemRangeInserted(0, tasks.size());
                         } else {
                             Log.d("test", "Error getting documents: ", task.getException());
                         }

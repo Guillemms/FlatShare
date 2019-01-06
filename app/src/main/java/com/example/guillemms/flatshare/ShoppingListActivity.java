@@ -36,17 +36,16 @@ import java.util.Map;
 
 public class ShoppingListActivity extends AppCompatActivity {
 
+    private static final int EDIT_ITEM = 0;
+    private static final int RESOLVE_DEBT = 1;
     private FirebaseFirestore db = FirebaseFirestore.getInstance();
     private ArrayList<Map> items;
     private RecyclerView itemsRV;
     private String flatId;
     private String userId;
-    private TextView userNameDebt;
-    private TextView userDebt;
     private Button goTask;
     private Adapter adapter = new Adapter();
     private Map userNames;
-    private Double debt = 0.0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -60,8 +59,6 @@ public class ShoppingListActivity extends AppCompatActivity {
         items = new ArrayList<>();
         itemsRV = findViewById(R.id.RV_Item);
         itemsRV.setLayoutManager(new LinearLayoutManager(this));
-        userNameDebt = findViewById(R.id.user_name);
-        userDebt = findViewById(R.id.user_debt);
         goTask = findViewById(R.id.task_btn);
 
         goTask.setOnClickListener(new View.OnClickListener() {
@@ -72,7 +69,6 @@ public class ShoppingListActivity extends AppCompatActivity {
         });
 
         userNames = new HashMap<>();
-        // ! Es posible que rebi abans els items que els users i no mostri els noms
         db.collection("Users")
                 .get()
                 .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
@@ -83,6 +79,8 @@ public class ShoppingListActivity extends AppCompatActivity {
                                 String name = (String)document.getData().get("Name");
                                 userNames.put(document.getId(), name);
                             }
+
+                            getShoppingItems();
                         } else {
                             Log.d("test", "Error getting documents: ", task.getException());
                         }
@@ -90,67 +88,79 @@ public class ShoppingListActivity extends AppCompatActivity {
                     }
                 });
 
-       db.collection("Users").document(userId).get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
+        itemsRV.setAdapter(adapter);
+
+        Button debtsButton = findViewById(R.id.debts_button);
+        debtsButton.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onComplete(@NonNull Task<DocumentSnapshot> task) {
-                if (task.isSuccessful()) {
-                    Map user = task.getResult().getData();
-                    String name = user.get("Name").toString();
-                    userNameDebt.setText(name);
-                } else {
-                    Log.d("test", "Error getting documents: ", task.getException());
-                }
+            public void onClick(View v) {
+                onDebtButtonClick();
             }
         });
+    }
 
-        itemsRV.setAdapter(adapter);
+    private void onDebtButtonClick() {
+        Intent intent = new Intent(this, DebtActivity.class);
+        startActivityForResult(intent, RESOLVE_DEBT);
+    }
+
+    private void getShoppingItems() {
+        int num = items.size();
+        items.clear();
+        adapter.notifyItemRangeRemoved(0, num);
 
         db.collection("Flats").document(flatId).collection("ShoppingItem")
                 .orderBy("Buy")
                 .get()
                 .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
-            @Override
-            public void onComplete(@NonNull com.google.android.gms.tasks.Task<QuerySnapshot> task) {
-                if (task.isSuccessful()) {
-                    for (QueryDocumentSnapshot document : task.getResult()) {
-                        Map flatItem = document.getData();
-                        if(flatItem.get("ID User").toString() != null){
-                            String pri = flatItem.get("Price").toString();
-                            Double p = Double.valueOf(pri);
-                            if(flatItem.get("ID User").toString().equals(userId)){
-                                debt = debt + p;
-                            } else{
-                                debt = debt - p;
+                    @Override
+                    public void onComplete(@NonNull com.google.android.gms.tasks.Task<QuerySnapshot> task) {
+                        if (task.isSuccessful()) {
+                            for (QueryDocumentSnapshot document : task.getResult()) {
+                                Map flatItemAll = new HashMap<>();
+                                flatItemAll.put("id", document.getId());
+                                flatItemAll.put("data", document.getData());
+                                items.add(flatItemAll);
+                                adapter.notifyItemInserted(items.size()-1);
                             }
+                        } else {
+                            Log.d("test", "Error getting documents: ", task.getException());
                         }
-                        userDebt.setText(String.valueOf(debt));
-                        items.add(flatItem);
-                        adapter.notifyItemInserted(items.size()-1);
                     }
-                } else {
-                    Log.d("test", "Error getting documents: ", task.getException());
-                }
-            }
-        });
+                });
+
+        adapter.notifyItemRangeInserted(0, items.size());
     }
 
     private void OnlyThisUser(){
-        items = new ArrayList<>();
-        db.collection("Flats").document(flatId).collection("ShoppingItem").whereArrayContains("ID User", userId)
-                .orderBy("Buy").get().addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
-            @Override
-            public void onComplete(@NonNull com.google.android.gms.tasks.Task<QuerySnapshot> task) {
-                if (task.isSuccessful()) {
-                    for (QueryDocumentSnapshot document : task.getResult()) {
-                        Map flatItem = document.getData();
-                        items.add(flatItem);
-                        adapter.notifyItemInserted(items.size()-1);
-                    }
-                } else {
-                    Log.d("test", "Error getting documents: ", task.getException());
+        int num = items.size();
+        items.clear();
+        adapter.notifyItemRangeRemoved(0, num);
+
+        db.collection("Flats")
+            .document(flatId)
+            .collection("ShoppingItem")
+            .whereEqualTo("ID User", userId)
+            .orderBy("Buy")
+            .get()
+            .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+        @Override
+        public void onComplete(@NonNull com.google.android.gms.tasks.Task<QuerySnapshot> task) {
+            if (task.isSuccessful()) {
+                for (QueryDocumentSnapshot document : task.getResult()) {
+                    Map flatItemAll = new HashMap<>();
+                    flatItemAll.put("id", document.getId());
+                    flatItemAll.put("data", document.getData());
+
+                    items.add(flatItemAll);
                 }
+            } else {
+                Log.d("test", "Error getting documents: ", task.getException());
+            }
             }
         });
+
+        adapter.notifyItemRangeInserted(0, items.size());
     }
 
     class ViewHolder extends RecyclerView.ViewHolder {
@@ -163,6 +173,13 @@ public class ShoppingListActivity extends AppCompatActivity {
 
             this.userView = itemView.findViewById(R.id.nameUserBuy);
             this.itemNameView = itemView.findViewById(R.id.nameitem);
+
+            itemView.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    openItemActivity(getAdapterPosition());
+                }
+            });
         }
     }
 
@@ -178,31 +195,50 @@ public class ShoppingListActivity extends AppCompatActivity {
         @Override
         public void onBindViewHolder(@NonNull ViewHolder holder, final int position) {
             Map item = items.get(position);
+            Map itemData = (Map) item.get("data");
 
-            String itemName = item.get("Name").toString();
-            String userBID = item.get("ID User").toString();
+            String itemName = itemData.get("Name").toString();
+            String userBID = itemData.get("ID User").toString();
             String userName = (String)userNames.get(userBID);
+            boolean isBought = (boolean)itemData.get("Buy");
 
             holder.itemNameView.setText(itemName);
-            holder.itemNameView.setPaintFlags(holder.itemNameView.getPaintFlags() | Paint.STRIKE_THRU_TEXT_FLAG);
-            holder.userView.setText(userName);
+            if(isBought) {
+                holder.itemNameView.setPaintFlags(holder.itemNameView.getPaintFlags() | Paint.STRIKE_THRU_TEXT_FLAG);
+                holder.userView.setText(userName);
+            }
         }
 
         @Override
         public int getItemCount() {
             return items.size();
         }
+
     }
 
-    public void openDebtActivity(View v){
-        Intent DebtIntent = new Intent(this, DebtActivity.class);
-        startActivity(DebtIntent);
-    }
-
-    public void openItemActivity(View v){
+    public void openItemActivity(int pos){
+        String itemId = (String) items.get(pos).get("id");
         Intent ItemIntent = new Intent(this, ShoppingItemActivity.class);
-        //ItemIntent.putExtra("itemId", itemId);
-        startActivity(ItemIntent);
+        ItemIntent.putExtra("itemId", itemId);
+        startActivityForResult(ItemIntent, EDIT_ITEM);
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        switch (requestCode){
+            case EDIT_ITEM:
+                if(resultCode == RESULT_OK){
+                    getShoppingItems();
+                }
+                break;
+            case RESOLVE_DEBT:
+                if(resultCode == RESULT_OK){
+                    getShoppingItems();
+                }
+                break;
+            default:
+                super.onActivityResult(requestCode, resultCode, data);
+        }
     }
 
     private void openTaskActivity() {

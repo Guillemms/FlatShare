@@ -141,9 +141,8 @@ public class TaskActivity extends AppCompatActivity {
                                 user.put("id", document.getId());
                                 user.put("data", document.getData());
                                 flatUsers.add(user);
-                                usersAdapter.notifyItemInserted(flatUsers.size()-1);
                             }
-                            onGetUsers();
+                            usersAdapter.notifyItemRangeInserted(0, flatUsers.size());
                         } else {
                             Log.d("test", "Error getting documents: ", task.getException());
                         }
@@ -231,10 +230,6 @@ public class TaskActivity extends AppCompatActivity {
                         }
                     });
         }
-    }
-
-    private void onGetUsers() {
-        usersAdapter.notifyItemRangeInserted(0, flatUsers.size());
     }
 
     // Recyclerview of users
