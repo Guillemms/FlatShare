@@ -20,7 +20,10 @@ import android.widget.TextView;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.Timestamp;
+import com.google.firebase.firestore.DocumentSnapshot;
+import com.google.firebase.firestore.EventListener;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.FirebaseFirestoreException;
 import com.google.firebase.firestore.FirebaseFirestoreSettings;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
@@ -69,39 +72,50 @@ public class TaskListActivity extends AppCompatActivity {
         db.setFirestoreSettings(settings);
 
         final SharedPreferences prefs = getSharedPreferences("config", MODE_PRIVATE);
-        userId = prefs.getString("userId", ""); // Borrar EhtvSxlbPi2VHE2aFcOH
-        flatId = prefs.getString("flatId", ""); // Borrar aspugPQibATokPjQNLTm
+        userId = prefs.getString("userId", null);
+        flatId = prefs.getString("flatId", null);
 
-        Button btnShop = findViewById(R.id.shop_button);
-        btnShop.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                onShopButtonClick();
-            }
-        });
+        if(flatId==null){
+            finish();
+            openFlatActivity();
+        }
 
-        taskListRecycler = findViewById(R.id.tasklist_recyclerView);
-        taskListRecycler.setLayoutManager(new LinearLayoutManager(this));
-        taskListRecycler.setAdapter(adapter);
+        if(userId==null){
+            finish();
+            openUserActivity();
+        }
 
-        // ! Es posible que rebi abans els items que els users i no mostri els noms
-        db.collection("Users")
-                .get()
-                .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
-                    @Override
-                    public void onComplete(@NonNull Task<QuerySnapshot> task) {
-                        if (task.isSuccessful()) {
-                            for (QueryDocumentSnapshot document : task.getResult()) {
-                                String name = (String)document.getData().get("Name");
-                                userNames.put(document.getId(), name);
+        if(userId!=null&&flatId!=null){
+            Button btnShop = findViewById(R.id.shop_button);
+            btnShop.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    onShopButtonClick();
+                }
+            });
+
+            taskListRecycler = findViewById(R.id.tasklist_recyclerView);
+            taskListRecycler.setLayoutManager(new LinearLayoutManager(this));
+            taskListRecycler.setAdapter(adapter);
+
+            db.collection("Users")
+                    .get()
+                    .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+                        @Override
+                        public void onComplete(@NonNull Task<QuerySnapshot> task) {
+                            if (task.isSuccessful()) {
+                                for (QueryDocumentSnapshot document : task.getResult()) {
+                                    String name = (String)document.getData().get("Name");
+                                    userNames.put(document.getId(), name);
+                                }
+                                getTasksFromThisFlat();
+                            } else {
+                                Log.d("test", "Error getting documents: ", task.getException());
                             }
-                            getTasksFromThisFlat();
-                        } else {
-                            Log.d("test", "Error getting documents: ", task.getException());
-                        }
 
-                    }
-                });
+                        }
+                    });
+        }
     }
 
     @Override
@@ -272,6 +286,16 @@ public class TaskListActivity extends AppCompatActivity {
     private void onShopButtonClick() {
         Intent intent = new Intent(this, ShoppingListActivity.class);
         startActivity(intent);
+    }
+
+    private void openFlatActivity() {
+        Intent intentFlat = new Intent(this, FlatActivity.class);
+        startActivity(intentFlat);
+    }
+
+    private void openUserActivity() {
+        Intent intentUser = new Intent(this, RegisterUserActivity.class);
+        startActivity(intentUser);
     }
 
     @Override
