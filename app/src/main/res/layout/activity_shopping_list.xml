@@ -37,6 +37,7 @@
         android:layout_marginEnd="8dp"
         android:layout_marginRight="8dp"
         android:layout_marginBottom="8dp"
+        android:background="@color/colorSecondary"
         android:text="Debts"
         app:layout_constraintBottom_toTopOf="@+id/task_btn"
         app:layout_constraintEnd_toEndOf="parent"
