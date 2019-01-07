@@ -40,9 +40,7 @@ public class RegisterUserActivity extends AppCompatActivity {
                 .build();
         db.setFirestoreSettings(settings);
 
-        SharedPreferences prefs = getSharedPreferences("config", MODE_PRIVATE);
-        String userId = prefs.getString("userId", null);
-        if (userId == null) {
+
             entrar_button.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
@@ -74,10 +72,6 @@ public class RegisterUserActivity extends AppCompatActivity {
                     });
                 }
             });
-        } else {
-            finish();
-            openFlatActivity(userId);
-        }
     }
 
     private void openFlatActivity(String userId){

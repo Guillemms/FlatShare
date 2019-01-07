@@ -260,9 +260,6 @@ public class ShoppingListActivity extends AppCompatActivity {
                 Intent newItemIntent = new Intent(this, ShoppingItemActivity.class);
                 startActivity(newItemIntent);
                 break;
-            case R.id.menu_filterItem:
-                OnlyThisUser();
-                break;
             case R.id.menu_newUser:
                 Intent newUserIntent = new Intent(this, AddTenantActivity.class);
                 newUserIntent.putExtra("lastActivity", 1);

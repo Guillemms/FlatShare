@@ -6,9 +6,6 @@
         android:id="@+id/menu_newItem"
         android:title="Nou producte" />
     <item
-        android:id="@+id/menu_filterItem"
-        android:title="Filtrar productes" />
-    <item
         android:id="@+id/menu_newUser"
         android:title="Afegir usuari" />
 </menu>
