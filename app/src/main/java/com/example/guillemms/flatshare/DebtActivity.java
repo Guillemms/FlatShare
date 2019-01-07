@@ -1,5 +1,6 @@
 package com.example.guillemms.flatshare;
 
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
@@ -150,7 +151,9 @@ public class DebtActivity extends AppCompatActivity {
                                     }
 
                                     setResult(RESULT_OK);
+                                    returnShopping();
                                     finish();
+
                                 } else {
                                     Log.d("test", "Error getting documents: ", task.getException());
                                 }
@@ -194,5 +197,10 @@ public class DebtActivity extends AppCompatActivity {
         public int getItemCount() {
             return userDebts.size();
         }
+    }
+
+    private void returnShopping(){
+        Intent ShoppingIntent = new Intent(this, ShoppingListActivity.class);
+        startActivity(ShoppingIntent);
     }
 }
