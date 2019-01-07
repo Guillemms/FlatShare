@@ -227,14 +227,10 @@ public class ShoppingListActivity extends AppCompatActivity {
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         switch (requestCode){
             case EDIT_ITEM:
-                if(resultCode == RESULT_OK){
-                    getShoppingItems();
-                }
+                getShoppingItems();
                 break;
             case RESOLVE_DEBT:
-                if(resultCode == RESULT_OK){
-                    getShoppingItems();
-                }
+                getShoppingItems();
                 break;
             default:
                 super.onActivityResult(requestCode, resultCode, data);
