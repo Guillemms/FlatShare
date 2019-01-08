@@ -123,44 +123,12 @@ public class ShoppingListActivity extends AppCompatActivity {
                                 items.add(flatItemAll);
                                 adapter.notifyItemInserted(items.size()-1);
                             }
+                            adapter.notifyItemRangeInserted(0, items.size());
                         } else {
                             Log.d("test", "Error getting documents: ", task.getException());
                         }
                     }
                 });
-
-        adapter.notifyItemRangeInserted(0, items.size());
-    }
-
-    private void OnlyThisUser(){
-        int num = items.size();
-        items.clear();
-        adapter.notifyItemRangeRemoved(0, num);
-
-        db.collection("Flats")
-            .document(flatId)
-            .collection("ShoppingItem")
-            .whereEqualTo("ID User", userId)
-            .orderBy("Buy")
-            .get()
-            .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
-        @Override
-        public void onComplete(@NonNull com.google.android.gms.tasks.Task<QuerySnapshot> task) {
-            if (task.isSuccessful()) {
-                for (QueryDocumentSnapshot document : task.getResult()) {
-                    Map flatItemAll = new HashMap<>();
-                    flatItemAll.put("id", document.getId());
-                    flatItemAll.put("data", document.getData());
-
-                    items.add(flatItemAll);
-                }
-            } else {
-                Log.d("test", "Error getting documents: ", task.getException());
-            }
-            }
-        });
-
-        adapter.notifyItemRangeInserted(0, items.size());
     }
 
     class ViewHolder extends RecyclerView.ViewHolder {
@@ -227,10 +195,14 @@ public class ShoppingListActivity extends AppCompatActivity {
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         switch (requestCode){
             case EDIT_ITEM:
-                getShoppingItems();
+                if(resultCode==RESULT_OK) {
+                    getShoppingItems();
+                }
                 break;
             case RESOLVE_DEBT:
-                getShoppingItems();
+                if(resultCode==RESULT_OK) {
+                    getShoppingItems();
+                }
                 break;
             default:
                 super.onActivityResult(requestCode, resultCode, data);

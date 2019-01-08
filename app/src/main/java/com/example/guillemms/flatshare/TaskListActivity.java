@@ -85,7 +85,7 @@ public class TaskListActivity extends AppCompatActivity {
             openUserActivity();
         }
 
-        if(userId!=null&&flatId!=null){
+        if(userId!=null && flatId!=null){
             Button btnShop = findViewById(R.id.shop_button);
             btnShop.setOnClickListener(new View.OnClickListener() {
                 @Override
@@ -144,6 +144,7 @@ public class TaskListActivity extends AppCompatActivity {
 
     private void getTasksFromThisFlat() {
         clearTaskList();
+
         db.collection("Flats")
                 .document(flatId)
                 .collection("Tasks")
@@ -154,7 +155,7 @@ public class TaskListActivity extends AppCompatActivity {
                     public void onComplete(@NonNull com.google.android.gms.tasks.Task<QuerySnapshot> task) {
                         if (task.isSuccessful()) {
                             int lastWeek = -1;
-                            cal.setTime(new Date());
+                            cal = Calendar.getInstance(Locale.ITALIAN);
                             int thisWeek = cal.get(Calendar.WEEK_OF_YEAR);
                             for (int i = 0; i < numberOfWeeksAhead; i++) {
                                 for (QueryDocumentSnapshot document : task.getResult()) {
@@ -172,7 +173,7 @@ public class TaskListActivity extends AppCompatActivity {
 
                                     int absWeek = thisWeek + i;
 
-                                    Calendar weekCal = Calendar.getInstance();
+                                    Calendar weekCal = Calendar.getInstance(Locale.ITALIAN);
                                     weekCal.add(Calendar.WEEK_OF_YEAR, i);
                                     String weekString = getWeekString(weekCal);
 

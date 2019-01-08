@@ -16,6 +16,7 @@ import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.Spinner;
 import android.widget.TextView;
 
@@ -235,8 +236,8 @@ public class TaskActivity extends AppCompatActivity {
     // Recyclerview of users
     class ViewHolder extends RecyclerView.ViewHolder {
         TextView userView;
-        Button upButton;
-        Button downButton;
+        ImageButton upButton;
+        ImageButton downButton;
 
         public ViewHolder(@NonNull View itemView) {
             super(itemView);

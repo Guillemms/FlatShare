@@ -7,5 +7,5 @@
         android:title="Nou producte" />
     <item
         android:id="@+id/menu_newUser"
-        android:title="Afegir usuari" />
+        android:title="@string/AddUser" />
 </menu>

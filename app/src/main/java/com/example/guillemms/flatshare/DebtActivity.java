@@ -3,6 +3,7 @@ package com.example.guillemms.flatshare;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.support.annotation.NonNull;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
@@ -95,7 +96,7 @@ public class DebtActivity extends AppCompatActivity {
                                                     String key = entry.getKey();
                                                     Float value = entry.getValue();
                                                     float userDebt = value - val;
-                                                    userDebts.add(new UserDebt((String) userNames.get(key), df.format(userDebt)+"€"));
+                                                    userDebts.add(new UserDebt((String) userNames.get(key), userDebt));
                                                 }
                                                 adapter.notifyItemRangeInserted(0, userDebts.size());
                                             } else {
@@ -190,7 +191,14 @@ public class DebtActivity extends AppCompatActivity {
         public void onBindViewHolder(@NonNull ViewHolder viewHolder, int i) {
             UserDebt userDebt = userDebts.get(i);
             viewHolder.userView.setText(userDebt.getUserName());
-            viewHolder.debtView.setText(userDebt.getUserDebt());
+            float debtAmount = userDebt.getUserDebt();
+            String debtAmountStr = df.format(debtAmount)+"€";
+            viewHolder.debtView.setText(debtAmountStr);
+            if(debtAmount<0) {
+                viewHolder.debtView.setTextColor(ContextCompat.getColor(getBaseContext() , R.color.colorNegativeDebt));
+            } else {
+                viewHolder.debtView.setTextColor(ContextCompat.getColor(getBaseContext(), R.color.colorPositiveDebt));
+            }
         }
 
         @Override

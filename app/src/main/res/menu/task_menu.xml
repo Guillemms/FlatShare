@@ -4,8 +4,8 @@
 
     <item
         android:id="@+id/menu_newTask"
-        android:title="New task" />
+        android:title="@string/NewTask" />
     <item
         android:id="@+id/menu_newUser"
-        android:title="Add user" />
+        android:title="@string/AddUser" />
 </menu>

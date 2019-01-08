@@ -4,14 +4,22 @@
     <string name="email">Email</string>
     <string name="registrarse">Registrar-se</string>
     <string name="entrar">Entrar</string>
-    <string name="TaskName">Task name</string>
-    <string name="TaskDescription">Task description</string>
-    <string name="Save">Save</string>
+    <string name="TaskName">Nom de la tasca</string>
+    <string name="TaskDescription">Descripció de la tasca</string>
+    <string name="Save">Desa</string>
     <string name="DefaultDate">dd/mm/yyyy</string>
+    <string name="InitialDate">Data d\'inici</string>
+    <string name="Periodicity">Periodicitat</string>
+    <string name="UserOrder">Ordre dels usuaris</string>
+    <string name="GoShoppingList">Llista de la compra</string>
+    <string name="Debts">Deutes</string>
+    <string name="GoToTaskList">Llista de tasques</string>
+    <string name="NewTask">Nova tasca</string>
+    <string name="AddUser">Afegir usuari</string>
     <string-array name="periodicity_array">
-        <item>Only once</item>
-        <item>Weekly</item>
-        <item>Every 2 weeks</item>
-        <item>Every 3 weeks</item>
+        <item>Només una vegada</item>
+        <item>Setmanal</item>
+        <item>Cada 2 setmanes</item>
+        <item>Cada 3 setmanes</item>
     </string-array>
 </resources>
